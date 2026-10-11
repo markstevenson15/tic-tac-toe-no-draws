@@ -85,7 +85,11 @@ Every single reachable terminal state in the entire game tree was evaluated. Zer
 * Playable Web UI (`index.html`, `style.css`, `src/app.js`): Functional, responsive, dark-mode themed, zero build step.
 * Unit Test Suite (`tests/game.test.js`): 100% passing.
 * Verification Engine (`verify_no_draws.py`): 100% passing with 0 draws across 255,168 terminal states.
-* Transcripts: All development steps tracked with timestamped `.jsonl` snapshots per commit.
+* Transcripts: All development steps tracked with timestamped `.jsonl` snapshots per commit, alongside cross-verification sessions from Perplexity (GPT-6.1 Sol).
+
+### Multi-Model Tooling & Evaluation
+* **Development Agent:** Google Antigravity IDE (powered by Gemini 3.8 Flash) was utilized for code generation, mathematical DFS verification, UI styling, and git history management.
+* **Evaluation Agent:** Perplexity AI (powered by GPT-6.1 Sol) was utilized for independent evaluation of the task brief, cross-checking edge-case requirements against the specification (`transcript/complete_pdf_transcript_timestamped.jsonl`).
 
 ### Strategic Nuance (Center Control)
 Because the center cell acts as both the primary tactical pivot for lines and the tie-breaker decider, Player 1 (X) moving first can claim the center square on turn 1. Player 2 (O) must immediately counter tactically to create dual threats or block X's paths. This intensifies the strategic tension of ordinary Tic-Tac-Toe without altering its familiar rules.
