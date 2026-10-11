@@ -21,7 +21,7 @@ SESSIONS_DIR = os.path.join(TRANSCRIPT_DIR, "sessions")
 SNAPSHOTS_DIR = os.path.join(TRANSCRIPT_DIR, "snapshots")
 
 DEST_SESSION_FILE = os.path.join(SESSIONS_DIR, f"{CONVERSATION_ID}.jsonl")
-DEST_LATEST_FILE = os.path.join(TRANSCRIPT_DIR, "transcript_latest.jsonl")
+DEST_LATEST_FILE = os.path.join(TRANSCRIPT_DIR, "transcript_antigravity_gemini.jsonl")
 DEST_MD_FILE = os.path.join(TRANSCRIPT_DIR, "TRANSCRIPT_READABLE.md")
 
 def export_transcript():
