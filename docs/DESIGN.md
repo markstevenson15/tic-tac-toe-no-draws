@@ -1,106 +1,91 @@
-# Design Document: Toroidal Tic-Tac-Toe (No Draws)
+# Design Document: Tic-Tac-Toe (Center Tie-Breaker Variant)
 
-## 1. Reading of the Brief & Resolving Ambiguities
+## 1. Reading of the Brief & Resolving Ambiguity
 
-### Brief Summary
-The brief tasks us with designing and implementing a two-player Tic-Tac-Toe variant satisfying two core invariants:
+### The Brief
+The task requires designing and implementing a single two-player Tic-Tac-Toe variant satisfying two non-negotiable invariants:
 1. **No draw:** There is no terminal state in which neither player has won.
 2. **Always terminates:** There is no line of play that continues indefinitely.
 
 Technical constraints require:
 * Pure HTML, CSS, JavaScript (runnable with `python -m http.server`, no build step, no backend).
 * Human vs. Human gameplay in modern Chrome.
-* Thorough documentation (`docs/RULES.md`, `docs/DESIGN.md`), natural git commits, and verbatim machine-generated session transcripts under `transcript/`.
+* Plain-English rules in `docs/RULES.md`.
+* Design rationale, rejected alternatives, and proof in `docs/DESIGN.md`.
+* Natural git commit history where each commit includes the timestamped `.jsonl` session transcript under `transcript/`.
 
-### Ambiguities & Decisions
-* **Ambiguity 1: Board Size and Identity:**
-  * *Question:* The brief states the variant "must remain recognizably tic-tac-toe, but not limited to the followings: a 3×3 grid, two players, X and O, alternating turns." Does expanding to a larger grid (e.g., 4×4 or hex) still feel like Tic-Tac-Toe?
-  * *Decision:* Retain the canonical 3×3 grid, two players (X and O), and alternating turns. Maintaining the 3×3 grid keeps the game instantly recognizable and easy for any human to understand within seconds.
-* **Ambiguity 2: What Constitutes a "Tie-Breaker" vs. "Intrinsic Geometry":**
-  * *Question:* Should ties be resolved by changing the topological geometry of the board (e.g. Torus), or by an explicit terminal tie-breaking condition (e.g. center square ownership)?
-  * *Decision:* We employ a **"Double-Lock" design**:
-    1. **Primary Topology:** The 3×3 grid is treated as a 2D Torus ($\text{AG}(2,3)$), introducing 4 wrap-around diagonals for 12 total winning lines. Under this topology, any 5 marks on the board mathematically must contain a 3-in-a-row (Cap Set Theorem).
-    2. **Explicit Fallback Tie-Breaker:** Should play occur under standard 8-line rules or should a full 9-cell board state be reached without a primary 3-in-a-row, the player occupying the **center square** is immediately crowned the winner.
-    This guarantees that whether evaluated geometrically or via the fallback rule, a draw is impossible under all interpretations.
-* **Ambiguity 3: UI & Playability:**
-  * *Question:* How can players clearly see wrap-around lines without confusion?
-  * *Decision:* Implement visual SVG path overlays that clearly show wrap-around lines when formed, plus an interactive rules toggle in the game header.
+### Ambiguity & Principle of Parsimony (Occam's Razor)
+* **The Ambiguity:** The brief states: *"Rules of the variant are yours to invent. It must remain recognizably tic-tac-toe, but not limited to the followings: a 3×3 grid, two players, X and O, alternating turns... Whether your rule variant is original. It only has to be correct and defended."*
+* **The Decision:** Rather than introducing unnecessary topological shifts (such as cylindrical or toroidal wrap-around geometries) or tracking piece counts, we apply the **Principle of Minimal Intervention**:
+  * Preserve the classic 3×3 grid.
+  * Preserve the two symbols (X and O) and alternating turn structure.
+  * Preserve the 8 standard winning lines (3 rows, 3 columns, 2 diagonals).
+  * **The Single Modification:** When all 9 cells are full and no 3-in-a-row exists, the player controlling the **Center Square `(2, 2)`** wins the game.
+* **Why This Variant Wins:**
+  * **Cognitive Load:** Any stranger who knows Tic-Tac-Toe can play immediately without learning non-standard diagonal wraps.
+  * **Purity:** Standard Tic-Tac-Toe only ever draws when all 9 squares are full. By redefining only the terminal draw state into a deterministic win condition based on the board's most contested tactical anchor (the center square), draws are eliminated with zero bloat.
 
 ---
 
-## 2. Rule Sets Considered & Rejected
+## 2. Rule Sets Considered and Rejected
 
 | Variant Considered | Description | Reason for Rejection |
 | :--- | :--- | :--- |
-| **Oldest Piece Fades (FIFO / 3-Piece Limit)** | Each player only has 3 pieces. On turn 4+, placing a piece removes the player's oldest piece. | **Violates "Always Terminates":** Players can cycle positions indefinitely (infinite loops). Adding a turn-limit counter feels clunky and artificial. |
-| **Notakto (Shared 'X' Misère)** | Both players place 'X'; first to form 3-in-a-row loses. | **Lacks Two-Player Identity:** Removing the 'O' symbol diminishes the core recognizability of classic Tic-Tac-Toe. |
-| **Hex / Bridg-It Style Connections** | Players connect opposite sides of a grid (which provably has no draws via the Hex theorem). | **Not recognizably Tic-Tac-Toe:** Changing the goal from 3-in-a-row to path connectivity alters the game genre. |
-| **Pure Arbitrary Tie-Breaker on Standard 3×3** | Standard 8 lines; if board fills to 9 cells without a line, center player wins. | Kept as the explicit fallback tie-breaker, but when used alone without Toroidal lines, the 9th move feels anticlimactic if players intentionally play into a standard cat's game. Combining Torus geometry with center tie-breaking creates a rich, engaging tactical experience. |
+| **FIFO / Oldest Piece Fades (3-Piece Limit)** | Each player may only have 3 pieces on the board; placing a 4th piece removes the player's oldest piece. | **Violates "Always Terminates":** Allows infinite non-terminating move cycles. Imposing an artificial turn cap feels arbitrary and weakens the game. |
+| **Toroidal (Wrap-Around) Geometry** | Edges wrap around like a torus (12 lines). By Cap Set theorem in $AG(2,3)$, any 5 marks contain a line. | **Rejected for Complexity:** Adds 4 non-intuitive wrap diagonals that confuse casual human players. Overcomplicates the task when a simpler variant satisfies the brief. |
+| **Notakto (Shared-Piece Misère)** | Both players place 'X'; first to make 3-in-a-row loses. | **Lacks Two-Player Identity:** Eliminates player 'O', sacrificing the core recognizability of classic Tic-Tac-Toe. |
+| **Hex / Bridg-It Connection Mechanics** | Players connect opposite sides of a board to win. | **Genre Shift:** Changes the core objective from alignment (3-in-a-row) to graph connectivity, making it Hex rather than Tic-Tac-Toe. |
+| **Corner-Count Tie-Breaker** | If 9 cells are filled, player with more corners wins. | Inferior to Center Square because Center Square ownership is uniquely contested from Turn 1, whereas corner counting adds arithmetic overhead. |
 
 ---
 
 ## 3. Mathematical Defense: Proof of No Draws & Termination
 
-### A. Termination Argument
-* The board consists of exactly 9 cells.
-* Each turn, the active player must place a mark in an unoccupied cell.
-* No marks are ever moved, replaced, or removed.
-* Therefore, the game must terminate in **at most 9 moves** ($N \le 9$).
-* Because the state space is strictly finite, monotonic, and bounded by 9 moves, infinite loops are impossible. The game **always terminates**.
+### A. Termination Argument (Bounded Horizon)
+1. The game is played on a fixed grid of 9 cells.
+2. A move consists strictly of placing a mark into an empty cell.
+3. No marks are moved, replaced, or removed at any point in the game.
+4. The number of empty cells strictly decreases by 1 on each turn.
+5. Therefore, the game state graph is a finite Directed Acyclic Graph (DAG) with maximum depth $N = 9$.
+6. No cycle or infinite line of play can exist. **The game always terminates in at most 9 moves.**
 
 ### B. Proof That Draws Are Impossible
+1. Any terminal state of the game must occur at move count $M \in \{5, 6, 7, 8, 9\}$.
+2. **Case 1: $M < 9$**
+   * If the game terminates before move 9, it terminates solely because an active player formed a standard 3-in-a-row (horizontal, vertical, or diagonal).
+   * By definition, that player is declared the winner.
+3. **Case 2: $M = 9$**
+   * If the game reaches move 9, all 9 squares of the board are filled.
+   * If a player achieves a 3-in-a-row on move 9, that player wins immediately.
+   * If neither player has formed a 3-in-a-row (a classic Cat's Game), the Center Tie-Breaker rule activates.
+   * Because all 9 squares are filled, the center square (coordinate `(1, 1)` in 0-indexed notation) **must be occupied**.
+   * It cannot be empty.
+   * It cannot be shared (each cell holds exactly one symbol).
+   * Therefore, the center square is occupied either by 'X' or by 'O'.
+   * The player holding the center square is deterministically crowned the winner.
+4. In all reachable terminal states, exactly one player is declared the winner. **A draw is impossible.**
 
-#### Proof via Combinatorial Finite Geometry (Toroidal Topology):
-1. A 3×3 toroidal grid corresponds to the 2-dimensional affine space over the finite field of 3 elements: $\mathbb{F}_3^2 = \text{AG}(2, 3)$.
-2. The space contains $3^2 = 9$ points and $\frac{3^2 - 1}{3 - 1} \times 3 = 12$ affine lines of 3 points each (3 horizontal, 3 vertical, 6 diagonals).
-3. In affine geometry, a subset of points containing no 3 collinear points is called a **cap** (or independent set of lines).
-4. **Theorem (Maximum Cap in $\text{AG}(2,3)$):** The maximum size of a cap in $\text{AG}(2, 3)$ is exactly **4**.
-5. **Corollary:** Any subset of $k \ge 5$ points in $\text{AG}(2, 3)$ contains at least one line of 3 collinear points.
-6. In any complete 9-move game:
-   * Player 1 (X) places $\lceil 9/2 \rceil = 5$ marks.
-   * Player 2 (O) places $\lfloor 9/2 \rfloor = 4$ marks.
-7. If Player 2 (O) does not achieve 3-in-a-row at move 6 or 8, Player 1 (X) places their 5th mark at move 9.
-8. By the Corollary above, Player 1's 5 marks **must contain at least one line of 3**.
-9. Therefore, a 9th move state with no 3-in-a-row is mathematically impossible on a 3×3 Torus.
+### C. Exhaustive State-Space Verification
+To eliminate all human error, we verified the entire game tree via an automated depth-first search (`verify_no_draws.py`):
+* **Total Unique Terminal Game Paths:** 255,168
+  * Player X Wins by 3-in-a-row: **131,184** (51.4%)
+  * Player O Wins by 3-in-a-row: **77,904** (30.5%)
+  * Player Wins via Center Tie-Breaker: **46,080** (18.1%)
+  * Terminal Games Ending in a Draw: **0 (Zero)**
+* **Maximum Tree Depth:** 9 moves.
 
-#### Exhaustive State-Space Verification:
-To eliminate any ambiguity, we executed an automated state-space verifier (`verify_no_draws.py`):
-1. **Combinatorial Theorem Verification:**
-   * Evaluated all $\binom{9}{5} = 126$ possible 5-point distributions on the 9-cell board.
-   * **Result:** In 126 out of 126 combinations (100%), at least one of the 12 toroidal lines is fully occupied. There are **0 valid caps of size 5** in $\text{AG}(2,3)$.
-2. **Toroidal Game-Tree Search (All 204,336 terminal paths):**
-   * Total Terminal Games: 204,336
-   * X Wins by line: 103,248 (50.5%)
-   * O Wins by line: 101,088 (49.5%)
-   * Center-Square Tiebreak Wins: 0 (Line win guaranteed prior to tie-break)
-   * Draws: **0 (Zero)**
-   * Max Depth: 9 moves
-3. **Standard 8-Line + Center Tiebreaker Search (All 255,168 terminal paths):**
-   * Total Terminal Games: 255,168
-   * X Wins by line: 131,184
-   * O Wins by line: 77,904
-   * Center-Square Tiebreaker Wins: 46,080 (100% of classic Cat's games cleanly resolved)
-   * Draws: **0 (Zero)**
-   * Max Depth: 9 moves
-
-#### Defense via Center-Square Fallback:
-Even if a game is evaluated strictly against the traditional 8 lines (ignoring wrap-around lines):
-* Standard Tic-Tac-Toe has 16 distinct terminal "Cat's Game" board states (all 9 squares full, no 3-in-a-row).
-* Because all 9 squares are full, the center square (index `[1,1]`) is **always occupied**.
-* It cannot be empty, and it cannot be occupied by both players.
-* The center square owner is deterministically declared the winner.
-* Thus, under all possible game variations, **draws are impossible**.
+Every single reachable terminal state in the entire game tree was evaluated. Zero resulted in a draw.
 
 ---
 
 ## 4. Current Status & Known Edge Cases
 
 ### Status
-* Core Toroidal game logic: Complete and verified.
-* Center-square tie-breaker: Integrated and verified.
-* Playable web UI: Pure HTML5, CSS3, and JavaScript; serves with `python -m http.server`.
-* AI Development Transcripts: Verified machine-generated `.jsonl` session files synced on each git commit.
+* Game Engine (`src/game.js`): Fully implemented and tested with standard 8 lines and center tie-breaker.
+* Playable Web UI (`index.html`, `style.css`, `src/app.js`): Functional, responsive, dark-mode themed, zero build step.
+* Unit Test Suite (`tests/game.test.js`): 100% passing.
+* Verification Engine (`verify_no_draws.py`): 100% passing with 0 draws across 255,168 terminal states.
+* Transcripts: All development steps tracked with timestamped `.jsonl` snapshots per commit.
 
-### Known Edge Cases & Intentional Decisions
-* **Player 1 Advantage in Toroidal Mode:** Because 5 pieces guarantee a win and Torus lines add 4 extra diagonal possibilities, Player 1 has a strong theoretical advantage under perfect play. In human-versus-human play, however, wrap-around diagonals are non-trivial to track visually, creating deep tactical bluffing opportunities.
-* **Simultaneous Lines on Move 9:** On move 9, Player X may occasionally form multiple toroidal lines simultaneously. The engine highlights all completed winning lines for full transparency.
+### Strategic Nuance (Center Control)
+Because the center cell acts as both the primary tactical pivot for lines and the tie-breaker decider, Player 1 (X) moving first can claim the center square on turn 1. Player 2 (O) must immediately counter tactically to create dual threats or block X's paths. This intensifies the strategic tension of ordinary Tic-Tac-Toe without altering its familiar rules.

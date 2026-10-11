@@ -1,11 +1,11 @@
 /**
- * UI Controller for Toroidal Tic-Tac-Toe
+ * UI Controller for Tic-Tac-Toe (Center Tie-Breaker Variant)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const { GameState, WINNING_LINES } = window.ToroidalTTT;
+  const { GameState } = window.TicTacToeVariant;
 
-  let game = new GameState({ toroidalEnabled: true });
+  const game = new GameState();
 
   // DOM Elements
   const boardEl = document.getElementById('board');
@@ -13,14 +13,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const playerIndicator = document.getElementById('player-indicator');
   const turnText = document.getElementById('turn-text');
   const moveCountEl = document.getElementById('move-count');
-  const modeTextEl = document.getElementById('mode-text');
   const bannerEl = document.getElementById('banner');
   const resetBtn = document.getElementById('btn-reset');
   const rulesBtn = document.getElementById('btn-rules');
   const modalRules = document.getElementById('modal-rules');
   const modalClose = document.getElementById('modal-close');
-  const modeTorusBtn = document.getElementById('mode-torus');
-  const modeStandardBtn = document.getElementById('mode-standard');
 
   // Initialize Board Cells
   const cells = [];
@@ -67,11 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
         bannerEl.textContent = `🏆 Player ${game.winner} wins by 3-in-a-row (${lineNames})!`;
         bannerEl.className = 'banner winner-line';
 
-        // Highlight cells and draw SVG paths
         highlightWinningCells(game.winningLines);
         drawWinningLines(game.winningLines);
       } else if (game.winReason === 'CENTER_TIEBREAKER') {
-        bannerEl.textContent = `⚡ Cat's Game Tie-Breaker! Player ${game.winner} holds the Center Square Anchor and wins!`;
+        bannerEl.textContent = `⚡ Cat's Game Tie-Breaker: Player ${game.winner} controls the Center Square Anchor and wins!`;
         bannerEl.className = 'banner winner-tiebreaker';
 
         const centerCell = getCellElement(1, 1);
@@ -121,44 +117,17 @@ document.addEventListener('DOMContentLoaded', () => {
     lines.forEach(line => {
       const coords = line.coords;
       const p1 = getCellCenter(coords[0][0], coords[0][1]);
-      const p2 = getCellCenter(coords[1][0], coords[1][1]);
       const p3 = getCellCenter(coords[2][0], coords[2][1]);
 
-      if (line.type !== 'wrap-diagonal') {
-        // Continuous single straight line
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        path.setAttribute('x1', p1.x);
-        path.setAttribute('y1', p1.y);
-        path.setAttribute('x2', p3.x);
-        path.setAttribute('y2', p3.y);
-        path.setAttribute('stroke', strokeColor);
-        path.setAttribute('stroke-width', strokeWidth);
-        path.setAttribute('stroke-linecap', 'round');
-        svgOverlay.appendChild(path);
-      } else {
-        // Wrap diagonal: draw segments showing toroidal continuity
-        const path1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        path1.setAttribute('x1', p1.x);
-        path1.setAttribute('y1', p1.y);
-        path1.setAttribute('x2', p2.x);
-        path1.setAttribute('y2', p2.y);
-        path1.setAttribute('stroke', '#a855f7');
-        path1.setAttribute('stroke-width', strokeWidth);
-        path1.setAttribute('stroke-dasharray', '6 4');
-        path1.setAttribute('stroke-linecap', 'round');
-        svgOverlay.appendChild(path1);
-
-        const path2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        path2.setAttribute('x1', p2.x);
-        path2.setAttribute('y1', p2.y);
-        path2.setAttribute('x2', p3.x);
-        path2.setAttribute('y2', p3.y);
-        path2.setAttribute('stroke', '#a855f7');
-        path2.setAttribute('stroke-width', strokeWidth);
-        path2.setAttribute('stroke-dasharray', '6 4');
-        path2.setAttribute('stroke-linecap', 'round');
-        svgOverlay.appendChild(path2);
-      }
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      path.setAttribute('x1', p1.x);
+      path.setAttribute('y1', p1.y);
+      path.setAttribute('x2', p3.x);
+      path.setAttribute('y2', p3.y);
+      path.setAttribute('stroke', strokeColor);
+      path.setAttribute('stroke-width', strokeWidth);
+      path.setAttribute('stroke-linecap', 'round');
+      svgOverlay.appendChild(path);
     });
   }
 
@@ -174,29 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
     svgOverlay.innerHTML = '';
     updateStatusDisplay();
   }
-
-  // Mode switching
-  modeTorusBtn.addEventListener('click', () => {
-    if (game.moveHistory.length > 0 && !confirm('Switching modes will reset current board. Proceed?')) {
-      return;
-    }
-    modeTorusBtn.classList.add('active');
-    modeStandardBtn.classList.remove('active');
-    modeTextEl.textContent = 'Toroidal (12 Lines)';
-    game.setToroidalMode(true);
-    resetGame();
-  });
-
-  modeStandardBtn.addEventListener('click', () => {
-    if (game.moveHistory.length > 0 && !confirm('Switching modes will reset current board. Proceed?')) {
-      return;
-    }
-    modeStandardBtn.classList.add('active');
-    modeTorusBtn.classList.remove('active');
-    modeTextEl.textContent = 'Standard + Center Tiebreak';
-    game.setToroidalMode(false);
-    resetGame();
-  });
 
   resetBtn.addEventListener('click', resetGame);
 

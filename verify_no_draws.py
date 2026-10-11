@@ -1,24 +1,26 @@
 #!/usr/bin/env python3
 """
-Exhaustive Game-Tree and Combinatorial Verification Script for Toroidal Tic-Tac-Toe
+Exhaustive Game-Tree Verification Script for Tic-Tac-Toe: Center Tie-Breaker Variant
 
-This script rigorously validates the two primary invariants demanded by the brief:
-  1. No Draw: Zero terminal states terminate without a winner.
-  2. Always Terminates: Every possible line of play ends in <= 9 moves.
+This script exhaustively checks every possible legal game trajectory from an empty board
+to verify the two core invariants required by the candidate brief:
+  1. No Draw: Zero terminal states end without a declared winner.
+  2. Always Terminates: Every line of play terminates in <= 9 moves.
 
-It tests two configurations:
-  Mode A: Toroidal 3x3 Grid (12 lines) + Center-Square Fallback
-  Mode B: Standard 3x3 Grid (8 lines) + Center-Square Tie-Breaker
+Variant Specification:
+  - Standard 3x3 board.
+  - 8 classic winning lines (3 rows, 3 cols, 2 diagonals).
+  - Center Tie-Breaker: When all 9 cells are occupied with no 3-in-a-row,
+    the player controlling the center cell (1, 1) is crowned the winner.
 """
 
-import itertools
 import sys
 
-# Board coordinate definition: 0 to 8
+# Board positions: 0 to 8
 # 0 1 2
 # 3 4 5
 # 6 7 8
-CENTER_CELL = 4  # (1, 1)
+CENTER_CELL = 4  # (row 1, col 1)
 
 STANDARD_LINES = [
     # Rows
@@ -29,43 +31,13 @@ STANDARD_LINES = [
     (0, 4, 8), (2, 4, 6)
 ]
 
-TOROIDAL_LINES = STANDARD_LINES + [
-    # Wrap-around diagonals
-    (1, 5, 6), (2, 3, 7),
-    (0, 5, 7), (1, 3, 8)
-]
+def check_win(board, player):
+    return any(all(board[pos] == player for pos in line) for line in STANDARD_LINES)
 
-def check_win(board, player, lines):
-    return any(all(board[pos] == player for pos in line) for line in lines)
-
-def verify_cap_set_theorem():
-    print("=" * 60)
-    print("1. VERIFYING COMBINATORIAL THEOREM (Affine Plane AG(2,3))")
-    print("=" * 60)
-    all_cells = list(range(9))
-    total_5_combinations = 0
-    combinations_with_line = 0
-
-    for comb in itertools.combinations(all_cells, 5):
-        total_5_combinations += 1
-        comb_set = set(comb)
-        has_line = any(all(pos in comb_set for pos in line) for line in TOROIDAL_LINES)
-        if has_line:
-            combinations_with_line += 1
-
-    print(f"Total 5-cell subsets on 3x3 grid: {total_5_combinations}")
-    print(f"5-cell subsets containing a 3-in-a-row on Torus: {combinations_with_line}")
-    assert total_5_combinations == combinations_with_line, "Failed: Found 5-cell cap with no line!"
-    print(">> THEOREM VERIFIED: Every 5-cell distribution on a 3x3 Torus")
-    print("   guarantees at least one 3-in-a-row (Max Cap Size is 4).\n")
-
-def run_exhaustive_dfs(toroidal_mode=True):
-    mode_name = "Toroidal (12 lines)" if toroidal_mode else "Standard (8 lines) + Center Tiebreaker"
-    print("=" * 60)
-    print(f"2. EXHAUSTIVE GAME-TREE DFS SEARCH: {mode_name}")
-    print("=" * 60)
-
-    lines = TOROIDAL_LINES if toroidal_mode else STANDARD_LINES
+def run_exhaustive_verification():
+    print("=" * 65)
+    print("EXHAUSTIVE GAME-TREE DFS SEARCH: Center Tie-Breaker Variant")
+    print("=" * 65)
 
     stats = {
         'total_terminal_games': 0,
@@ -82,9 +54,9 @@ def run_exhaustive_dfs(toroidal_mode=True):
         if depth > stats['max_depth']:
             stats['max_depth'] = depth
 
-        # Check win for the player who just moved
+        # Check if the player who just played won by completing a 3-in-a-row
         last_player = 'O' if turn == 'X' else 'X'
-        if depth > 0 and check_win(board, last_player, lines):
+        if depth > 0 and check_win(board, last_player):
             stats['total_terminal_games'] += 1
             if last_player == 'X':
                 stats['x_wins_line'] += 1
@@ -92,10 +64,9 @@ def run_exhaustive_dfs(toroidal_mode=True):
                 stats['o_wins_line'] += 1
             return
 
-        # Full board check (move 9)
+        # Full board reached (Move 9) without a 3-in-a-row
         if depth == 9:
             stats['total_terminal_games'] += 1
-            # Tie-breaker activates if no line was detected
             center_owner = board[CENTER_CELL]
             if center_owner in ('X', 'O'):
                 stats['center_tiebreaker_wins'] += 1
@@ -103,7 +74,7 @@ def run_exhaustive_dfs(toroidal_mode=True):
                 stats['draws'] += 1
             return
 
-        # Recursive branching
+        # Explore branching moves
         for i in range(9):
             if board[i] == '.':
                 board[i] = turn
@@ -114,18 +85,17 @@ def run_exhaustive_dfs(toroidal_mode=True):
     dfs(0, 'X')
 
     print(f"Total Unique Terminal Game Paths: {stats['total_terminal_games']:,}")
-    print(f"  - X Wins (by line):             {stats['x_wins_line']:,}")
-    print(f"  - O Wins (by line):             {stats['o_wins_line']:,}")
-    print(f"  - Center-Square Tiebreak Wins:  {stats['center_tiebreaker_wins']:,}")
-    print(f"  - Draws:                        {stats['draws']}")
-    print(f"Maximum Game Tree Depth:          {stats['max_depth']} moves")
+    print(f"  - Player X Wins (by 3-in-a-row):        {stats['x_wins_line']:,} ({stats['x_wins_line']/stats['total_terminal_games']*100:.1f}%)")
+    print(f"  - Player O Wins (by 3-in-a-row):        {stats['o_wins_line']:,} ({stats['o_wins_line']/stats['total_terminal_games']*100:.1f}%)")
+    print(f"  - Player Wins (Center Tie-Breaker):     {stats['center_tiebreaker_wins']:,} ({stats['center_tiebreaker_wins']/stats['total_terminal_games']*100:.1f}%)")
+    print(f"  - Games Ending in Draw:                 {stats['draws']}")
+    print(f"Maximum Game Tree Depth:                  {stats['max_depth']} moves")
 
-    assert stats['draws'] == 0, f"FAILED: Found {stats['draws']} draw states!"
+    assert stats['draws'] == 0, f"FAILED: Encountered {stats['draws']} draw states!"
     assert stats['max_depth'] <= 9, f"FAILED: Depth exceeded 9 moves!"
-    print(">> INVARIANTS PROVEN: Zero draws, always terminates in <= 9 moves.\n")
+    print("=" * 65)
+    print(">> VERIFICATION SUCCESSFUL: 0 DRAWS, 100% DEFINITIVE RESOLUTION <<")
+    print("=" * 65)
 
 if __name__ == '__main__':
-    verify_cap_set_theorem()
-    run_exhaustive_dfs(toroidal_mode=True)
-    run_exhaustive_dfs(toroidal_mode=False)
-    print("ALL COMBINATORIAL AND GAME-TREE INVARIANTS MATHEMATICALLY CONFIRMED.")
+    run_exhaustive_verification()

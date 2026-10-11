@@ -1,7 +1,7 @@
-# Toroidal Tic-Tac-Toe (With Center-Square Tie-Breaker)
+# Tic-Tac-Toe: Center Tie-Breaker Variant
 
 ## Quick Overview
-Toroidal Tic-Tac-Toe is a two-player game played on a standard 3×3 grid. It preserves the classic feel, symbols, and turn structure of traditional Tic-Tac-Toe, but introduces two crucial rules ensuring that **a game can never end in a draw** and **always terminates in at most 9 moves**.
+This variant is played on a standard 3×3 grid with two players (X and O). It preserves the classic rules, symbols, and turn structure of traditional Tic-Tac-Toe, while modifying the terminal state resolution so that **a game can never end in a draw** and **always terminates in at most 9 moves**.
 
 ---
 
@@ -15,44 +15,38 @@ Toroidal Tic-Tac-Toe is a two-player game played on a standard 3×3 grid. It pre
 ## Rules of Play
 
 1. **Alternating Turns:**
-   Players alternate turns placing their respective symbol (X or O) into any unoccupied square on the 3×3 board. Once placed, marks cannot be moved or removed.
+   Players alternate turns placing their respective mark (X or O) into any unoccupied square on the 3×3 board. Once placed, marks cannot be moved or removed.
 
-2. **Primary Win Condition (3-in-a-Row on a Torus):**
-   The first player to achieve three of their marks in an unbroken line wins immediately.
-   Unlike standard Tic-Tac-Toe, the board is **toroidal** (wrap-around topology, like *Asteroids* or *Pac-Man*):
-   * **Horizontal lines (3):** Any complete row.
-   * **Vertical lines (3):** Any complete column.
-   * **Standard diagonals (2):** Top-left to bottom-right, and top-right to bottom-left.
-   * **Wrap-around diagonals (4):** Diagonals that wrap across opposite borders (e.g., Top-Center $\rightarrow$ Middle-Right $\rightarrow$ Bottom-Left, or Top-Right $\rightarrow$ Middle-Left $\rightarrow$ Bottom-Center).
-   
-   There are **12 winning lines** in total.
+2. **Primary Win Condition (Classic 3-in-a-Row):**
+   The first player to place three of their marks in an unbroken horizontal, vertical, or diagonal line wins immediately.
+   There are exactly **8 winning lines**:
+   * **3 Horizontal Rows:** Top, Middle, Bottom
+   * **3 Vertical Columns:** Left, Center, Right
+   * **2 Diagonals:** Top-Left to Bottom-Right, Top-Right to Bottom-Left
 
-3. **The Center-Square Tie-Breaker Rule:**
-   If all 9 squares on the board are occupied and neither player has achieved a primary 3-in-a-row (such as when playing under standard 8-line restrictions or edge-case disputes), **the player controlling the center square (the middle cell) is immediately declared the winner.**
+3. **The Center Tie-Breaker Rule (No Draws):**
+   If all 9 squares on the board are occupied and neither player has formed a 3-in-a-row (a classic "Cat's Game"), **the player occupying the Center Square (the middle cell at row 2, column 2) is declared the winner.**
 
-4. **No Draws, Guaranteed Termination:**
-   * Because every move occupies an empty cell on a 9-cell grid, the game terminates in **at most 9 moves**.
-   * By the combinatorial geometry of a 3×3 Torus (the affine plane $\text{AG}(2,3)$), any 5 marks on the board must contain at least one line of 3.
-   * Furthermore, because the center square cannot remain empty once all 9 cells are filled, the tie-breaker guarantees that a winner is always deterministically decided.
-   * **A tie or draw is impossible.**
+4. **Guaranteed Termination:**
+   * Because every move permanently claims one empty square on a finite 9-cell board, the game must conclude in **at most 9 moves**.
+   * When all 9 squares are filled, the center square is guaranteed to be occupied by exactly one player.
+   * Therefore, every game yields a definitive winner. **A draw is impossible.**
 
 ---
 
-## Winning Line Reference (All 12 Toroidal Lines)
+## Line Reference Table
 
-Using board coordinates `(row, col)` where rows and columns are indexed `0, 1, 2`:
+Using coordinates `(row, col)` from 1 to 3:
 
-| Line Type | Coordinate 1 | Coordinate 2 | Coordinate 3 | Description |
+| Line Name | Cell 1 | Cell 2 | Cell 3 | Description |
 | :--- | :--- | :--- | :--- | :--- |
-| **Row 0** | (0, 0) | (0, 1) | (0, 2) | Top horizontal |
-| **Row 1** | (1, 0) | (1, 1) | (1, 2) | Middle horizontal |
-| **Row 2** | (2, 0) | (2, 1) | (2, 2) | Bottom horizontal |
-| **Col 0** | (0, 0) | (1, 0) | (2, 0) | Left vertical |
-| **Col 1** | (0, 1) | (1, 1) | (2, 1) | Center vertical |
-| **Col 2** | (0, 2) | (1, 2) | (2, 2) | Right vertical |
-| **Diag Main** | (0, 0) | (1, 1) | (2, 2) | Classic main diagonal |
-| **Diag Anti** | (0, 2) | (1, 1) | (2, 0) | Classic anti-diagonal |
-| **Wrap Diag 1** | (0, 1) | (1, 2) | (2, 0) | Shifted main diagonal |
-| **Wrap Diag 2** | (0, 2) | (1, 0) | (2, 1) | Shifted main diagonal |
-| **Wrap Anti 1** | (0, 0) | (1, 2) | (2, 1) | Shifted anti-diagonal |
-| **Wrap Anti 2** | (0, 1) | (1, 0) | (2, 2) | Shifted anti-diagonal |
+| **Row 1** | (1, 1) | (1, 2) | (1, 3) | Top row |
+| **Row 2** | (2, 1) | (2, 2) | (2, 3) | Middle row |
+| **Row 3** | (3, 1) | (3, 2) | (3, 3) | Bottom row |
+| **Col 1** | (1, 1) | (2, 1) | (3, 1) | Left column |
+| **Col 2** | (1, 2) | (2, 2) | (3, 2) | Center column |
+| **Col 3** | (1, 3) | (2, 3) | (3, 3) | Right column |
+| **Main Diagonal** | (1, 1) | (2, 2) | (3, 3) | Top-left to bottom-right |
+| **Anti Diagonal** | (1, 3) | (2, 2) | (3, 1) | Top-right to bottom-left |
+
+*Tie-Breaker Anchor Cell:* **(2, 2)** (Middle / Center cell).

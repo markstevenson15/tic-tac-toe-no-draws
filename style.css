@@ -63,31 +63,12 @@ h1 {
   font-weight: 500;
 }
 
-.mode-selector {
-  display: flex;
-  background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 9999px;
-  padding: 0.25rem;
-  gap: 0.25rem;
-}
-
-.mode-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-muted);
+.rule-tag {
+  color: var(--accent-center);
   font-weight: 600;
-  font-size: 0.8rem;
-  padding: 0.4rem 0.9rem;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.mode-btn.active {
-  background: #334155;
-  color: var(--text-main);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
 }
 
 .status-panel {
