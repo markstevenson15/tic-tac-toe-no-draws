@@ -20,7 +20,7 @@ Technical constraints require:
   * Preserve the classic 3×3 grid.
   * Preserve the two symbols (X and O) and alternating turn structure.
   * Preserve the 8 standard winning lines (3 rows, 3 columns, 2 diagonals).
-  * **The Single Modification:** When all 9 cells are full and no 3-in-a-row exists, the player controlling the **Center Square `(2, 2)`** wins the game.
+  * **The Single Modification:** When all 9 cells are full and no 3-in-a-row exists, the player controlling the **Center Square** (row 2, column 2 in 1-indexed notation; array index `[1, 1]`) wins the game.
 * **Why This Variant Wins:**
   * **Cognitive Load:** Any stranger who knows Tic-Tac-Toe can play immediately without learning non-standard diagonal wraps.
   * **Purity:** Standard Tic-Tac-Toe only ever draws when all 9 squares are full. By redefining only the terminal draw state into a deterministic win condition based on the board's most contested tactical anchor (the center square), draws are eliminated with zero bloat.
@@ -58,7 +58,7 @@ Technical constraints require:
    * If the game reaches move 9, all 9 squares of the board are filled.
    * If a player achieves a 3-in-a-row on move 9, that player wins immediately.
    * If neither player has formed a 3-in-a-row (a classic Cat's Game), the Center Tie-Breaker rule activates.
-   * Because all 9 squares are filled, the center square (coordinate `(1, 1)` in 0-indexed notation) **must be occupied**.
+   * Because all 9 squares are filled, the center square (row 2, column 2 in 1-indexed notation; array index `[1, 1]`) **must be occupied**.
    * It cannot be empty.
    * It cannot be shared (each cell holds exactly one symbol).
    * Therefore, the center square is occupied either by 'X' or by 'O'.

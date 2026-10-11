@@ -25,7 +25,7 @@ This variant is played on a standard 3×3 grid with two players (X and O). It pr
    * **2 Diagonals:** Top-Left to Bottom-Right, Top-Right to Bottom-Left
 
 3. **The Center Tie-Breaker Rule (No Draws):**
-   If all 9 squares on the board are occupied and neither player has formed a 3-in-a-row (a classic "Cat's Game"), **the player occupying the Center Square (the middle cell at row 2, column 2) is declared the winner.**
+   If all 9 squares on the board are occupied and neither player has formed a 3-in-a-row (a classic "Cat's Game"), **the player occupying the Center Square (row 2, column 2 in 1-indexed coordinates; array index `[1, 1]`) is declared the winner.**
 
 4. **Guaranteed Termination:**
    * Because every move permanently claims one empty square on a finite 9-cell board, the game must conclude in **at most 9 moves**.

@@ -11,7 +11,7 @@ Variant Specification:
   - Standard 3x3 board.
   - 8 classic winning lines (3 rows, 3 cols, 2 diagonals).
   - Center Tie-Breaker: When all 9 cells are occupied with no 3-in-a-row,
-    the player controlling the center cell (1, 1) is crowned the winner.
+    the player controlling the center cell (row 2, column 2; array index [1, 1] / flat index 4) is crowned the winner.
 """
 
 import sys
@@ -20,7 +20,7 @@ import sys
 # 0 1 2
 # 3 4 5
 # 6 7 8
-CENTER_CELL = 4  # (row 1, col 1)
+CENTER_CELL = 4  # (row 2, col 2 / 0-indexed [1, 1])
 
 STANDARD_LINES = [
     # Rows
