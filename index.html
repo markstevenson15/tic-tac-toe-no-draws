@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toroidal Tic-Tac-Toe — No Draws Variant</title>
+  <meta name="description" content="A two-player Tic-Tac-Toe variant on a toroidal grid with a center-square tie-breaker that mathematically guarantees no draws and always terminates.">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>TOROIDAL TIC-TAC-TOE</h1>
+      <p class="subtitle">A mathematical two-player variant with zero draws</p>
+    </header>
+
+    <!-- Game Mode Switcher -->
+    <div class="mode-selector" role="radiogroup" aria-label="Game Mode">
+      <button id="mode-torus" class="mode-btn active" type="button">Toroidal (12 Lines)</button>
+      <button id="mode-standard" class="mode-btn" type="button">Standard (8 Lines) + Tie-Breaker</button>
+    </div>
+
+    <!-- Status & Turn Banner -->
+    <div class="status-panel">
+      <div class="turn-badge">
+        <span id="player-indicator" class="player-indicator player-x">X</span>
+        <span id="turn-text">Turn: Player X</span>
+      </div>
+      <div class="meta-stats">
+        <div>Moves: <span id="move-count" class="move-count">0 / 9</span></div>
+        <div id="mode-text">Toroidal (12 Lines)</div>
+      </div>
+    </div>
+
+    <!-- Game Result Banner -->
+    <div id="banner" class="banner" role="alert"></div>
+
+    <!-- 3x3 Board Arena -->
+    <div class="board-container">
+      <div id="board" class="grid"></div>
+      <svg id="svg-overlay" class="svg-overlay" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-bar">
+      <button id="btn-reset" class="btn btn-primary" type="button">
+        🔄 New Game
+      </button>
+      <button id="btn-rules" class="btn btn-secondary" type="button">
+        📖 Rules & Proof
+      </button>
+    </div>
+  </div>
+
+  <!-- Rules & Proof Modal -->
+  <div id="modal-rules" class="modal" role="dialog" aria-modal="true" aria-labelledby="rules-title">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="rules-title">Game Rules & Mathematical Proof</h2>
+        <button id="modal-close" class="modal-close" aria-label="Close rules">&times;</button>
+      </div>
+      <div class="modal-body">
+        <h3>1. The Core Invariants</h3>
+        <p>This variant is designed to strictly satisfy two mathematical conditions:</p>
+        <ul>
+          <li><strong>No Draw:</strong> There is no terminal state in which neither player has won.</li>
+          <li><strong>Always Terminates:</strong> Every line of play terminates in at most 9 moves.</li>
+        </ul>
+
+        <h3>2. Toroidal Topology (12 Winning Lines)</h3>
+        <p>In addition to the 3 rows, 3 columns, and 2 classic diagonals, opposite edges wrap around like a 2D torus (affine plane <em>AG(2,3)</em>). This introduces 4 wrap-around diagonals.</p>
+        <div class="code-box">
+Wrap Diagonals:<br>
+• (0,1) → (1,2) → (2,0)<br>
+• (0,2) → (1,0) → (2,1)<br>
+• (0,0) → (1,2) → (2,1)<br>
+• (0,1) → (1,0) → (2,2)
+        </div>
+
+        <h3>3. The Center-Square Tie-Breaker</h3>
+        <p>If all 9 cells are filled and neither player has achieved 3-in-a-row (such as in standard non-wrap play), the player holding the <strong>Center Square (1,1) Anchor</strong> is declared the winner immediately.</p>
+
+        <h3>4. Mathematical Proof (Cap Set Theorem)</h3>
+        <p>On a 3×3 Torus (<em>AG(2,3)</em>), the maximum size of a cap (a subset with no 3 collinear points) is <strong>4</strong>. Any 5 points must contain at least one line of 3. Because Player X places 5 pieces by move 9, Player X is mathematically guaranteed a line if Player O has not already won.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts: No Build Step Required -->
+  <script src="src/game.js"></script>
+  <script src="src/app.js"></script>
+</body>
+</html>
