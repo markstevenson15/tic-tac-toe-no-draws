@@ -41,32 +41,67 @@ Technical constraints require:
 
 ## 3. Mathematical Defense: Proof of No Draws & Termination
 
-### A. Termination Argument (Bounded Horizon)
-1. The game is played on a fixed grid of 9 cells.
-2. A move consists strictly of placing a mark into an empty cell.
-3. No marks are moved, replaced, or removed at any point in the game.
-4. The number of empty cells strictly decreases by 1 on each turn.
-5. Therefore, the game state graph is a finite Directed Acyclic Graph (DAG) with maximum depth $N = 9$.
-6. No cycle or infinite line of play can exist. **The game always terminates in at most 9 moves.**
+### A. Formal Definitions & Model Assumptions
+* Let $B$ be the finite set of board squares, with $|B| = 9$, and let $c \in B$ denote the center square (coordinates `[1, 1]` in 0-indexed notation).
+* A board state is a function:
+  $$s: B \rightarrow \{\emptyset, X, O\}$$
+  where $\emptyset$ denotes an unoccupied square.
 
-### B. Proof That Draws Are Impossible
-1. Any terminal state of the game must occur at move count $M \in \{5, 6, 7, 8, 9\}$.
-2. **Case 1: $M < 9$**
-   * If the game terminates before move 9, it terminates solely because an active player formed a standard 3-in-a-row (horizontal, vertical, or diagonal).
-   * By definition, that player is declared the winner.
-3. **Case 2: $M = 9$**
-   * If the game reaches move 9, all 9 squares of the board are filled.
-   * If a player achieves a 3-in-a-row on move 9, that player wins immediately.
-   * If neither player has formed a 3-in-a-row (a classic Cat's Game), the Center Tie-Breaker rule activates.
-   * Because all 9 squares are filled, the center square (row 2, column 2 in 1-indexed notation; array index `[1, 1]`) **must be occupied**.
-   * It cannot be empty.
-   * It cannot be shared (each cell holds exactly one symbol).
-   * Therefore, the center square is occupied either by 'X' or by 'O'.
-   * The player holding the center square is deterministically crowned the winner.
-4. In all reachable terminal states, exactly one player is declared the winner. **A draw is impossible.**
+**Operational Assumptions:**
+1. Each legal transition alters exactly one square from $\emptyset$ to the current player's mark ($X$ or $O$).
+2. Marks cannot be moved, replaced, or removed once placed.
+3. Play ends immediately when an active player completes a winning line (3-in-a-row horizontally, vertically, or diagonally).
+4. If the board becomes full ($E(s) = 0$) without any completed 3-in-a-row line, the owner of the center square $s(c)$ wins.
 
-### C. Exhaustive State-Space Verification
-To eliminate all human error, we verified the entire game tree via an automated depth-first search (`verify_no_draws.py`):
+---
+
+### B. Formal Proof of Guaranteed Termination (Ranking / Variant Function)
+Define the number of empty squares in state $s$ as:
+$$E(s) = \left|\{b \in B : s(b) = \emptyset\}\right|$$
+
+* **Initial State:** At the start of the game, all cells are unoccupied:
+  $$E(s_0) = 9$$
+* **Strict Monotonicity:** For every legal move from state $s$ to state $s'$:
+  $$E(s') = E(s) - 1$$
+* **Non-Negativity & Finite Bound:** For all valid board states, $E(s) \ge 0$. Therefore, after $n$ legal moves:
+  $$E(s_n) = 9 - n \ge 0 \implies n \le 9$$
+
+Because $E(s)$ is a strictly decreasing integer variant function bounded below by 0 (a standard ranking function technique for proving program termination), an infinite line of play or cycle of states is mathematically impossible. If a line is completed, play ends earlier ($n \in \{5, 6, 7, 8\}$); otherwise, the full-board rule terminates play at $n = 9$.
+
+**Conclusion:** Every legal game is guaranteed to terminate in at most 9 moves.
+
+---
+
+### C. Formal Proof That Every Game Has Exactly One Winner (No Draws)
+Let $W(s) \in \{X, O, \text{None}\}$ be the outcome function. The terminal game states are partitioned into two disjoint and exhaustive cases:
+
+* **Case 1: A Player Completes a Winning Line ($n \le 9$)**
+  * $\exists \text{ line } L \subset B \text{ such that } \forall b \in L, s(b) = p \in \{X, O\}$.
+  * By rule definition, play terminates immediately upon line completion, and player $p$ is declared the winner ($W(s) = p$).
+* **Case 2: Full Board Without a Winning Line ($n = 9$)**
+  * The board is completely occupied, meaning $E(s) = 0$.
+  * Hence, every cell on the board contains a mark, including the center square:
+    $$s(c) \in \{X, O\}$$
+  * Because each cell holds exactly one mark, the center square belongs to exactly one player. Under the fallback tie-breaker rule, player $s(c)$ is crowned the winner ($W(s) = s(c)$).
+
+*Precedence Clarification:* A line completed on move 9 belongs strictly to Case 1—the line-win condition takes precedence over the center tie-breaker.
+
+**Conclusion:** For every terminal state $s_{\text{term}}$, $W(s_{\text{term}}) \in \{X, O\}$. The set of draw states is strictly empty ($\mathcal{S}_{\text{draw}} = \emptyset$).
+
+---
+
+### D. Summary Theorem & Concise Formal Proof
+> **Theorem.** *Every legal game terminates within nine moves and has exactly one winner.*
+>
+> **Proof.** Let $E$ denote the number of empty squares. Initially $E = 9$. Each legal move decreases $E$ by exactly one, and $E$ cannot be negative. Therefore, play cannot continue beyond nine moves.
+> If a player completes a winning line, the game ends immediately with that player as the winner. Otherwise, the board eventually becomes full ($E = 0$). The center square must then contain exactly one player’s mark, and that player wins by the fallback rule. Since play stops at the first winning line, an earlier opponent victory cannot coexist with a later one. Thus every legal game terminates with exactly one winner. $\blacksquare$
+
+*Note on Game Boundary:* The scope is legal play within one game: waiting, rejected clicks on occupied cells, and resetting the board are UI events, not additional legal moves in that game.
+
+---
+
+### E. Exhaustive State-Space Verification
+To eliminate all human error and verify the theorem against any implementation edge case, an automated depth-first search over the complete game tree was executed via `verify_no_draws.py`:
 * **Total Unique Terminal Game Paths:** 255,168
   * Player X Wins by 3-in-a-row: **131,184** (51.4%)
   * Player O Wins by 3-in-a-row: **77,904** (30.5%)
@@ -74,7 +109,7 @@ To eliminate all human error, we verified the entire game tree via an automated 
   * Terminal Games Ending in a Draw: **0 (Zero)**
 * **Maximum Tree Depth:** 9 moves.
 
-Every single reachable terminal state in the entire game tree was evaluated. Zero resulted in a draw.
+Every single reachable terminal state in the entire game tree was computationally evaluated. Zero resulted in a draw.
 
 ---
 
