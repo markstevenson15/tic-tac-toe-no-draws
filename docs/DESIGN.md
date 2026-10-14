@@ -113,7 +113,60 @@ Every single reachable terminal state in the entire game tree was computationall
 
 ---
 
-## 4. Current Status & Known Edge Cases
+## 4. Architecture & System Design
+
+The application adheres to an unbundled, zero-build Model-View-Controller (MVC) architecture designed for portability, deterministic testability, and algorithmic defensibility.
+
+### A. Architectural Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      PRESENTATION LAYER                     │
+│   index.html (Semantic HTML5)  +  style.css (Vanilla CSS)   │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ DOM Events / Visual Feedback
+┌──────────────────────────────▼──────────────────────────────┐
+│                      CONTROLLER LAYER                       │
+│                         src/app.js                          │
+│   (Binds UI clicks, translates state to DOM/SVG animations) │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ Dispatches Actions / State Queries
+┌──────────────────────────────▼──────────────────────────────┐
+│                    CORE ENGINE / MODEL                      │
+│                         src/game.js                         │
+│   (Headless finite state machine, UMD module wrapper)       │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ Validated & Defended by
+┌──────────────────────────────▼──────────────────────────────┐
+│                  VERIFICATION & PROOF LAYER                 │
+│  verify_no_draws.py (DFS over 255k paths) + tests/game.test.js│
+└─────────────────────────────────────────────────────────────┘
+```
+
+### B. Component Responsibilities
+
+1. **Core Domain Engine (Headless State Machine — `src/game.js`):**
+   * Encapsulates the complete game rules and state transitions without any dependency on browser APIs (`window`, `document`) or external packages.
+   * **Universal Module Definition (UMD):** Wrapped to export cleanly in both Node.js test runners (`module.exports`) and browser global scopes (`window.TicTacToeVariant`), satisfying the zero-build constraint while preserving testability.
+   * **Immutable Move Invariants:** Rejects out-of-bounds coordinates, duplicate placements on occupied cells, and moves executed after terminal states.
+   * **Strict Decision Precedence:** Checks for 3-in-a-row line completion first (`winReason: 'LINE'`); activates center anchor tie-breaking only upon reaching the 9th move without a line (`winReason: 'CENTER_TIEBREAKER'`).
+
+2. **Controller & Event Adapter (`src/app.js`):**
+   * Translates DOM click events on the 3×3 grid into atomic calls to `GameState.makeMove(row, col)`.
+   * Maps winning line coordinates to animated SVG line overlays for visual clarity.
+   * Triggers distinct audio/visual feedback for standard line wins versus center tie-breaker victories (pulsating center anchor).
+
+3. **Presentation View (`index.html` & `style.css`):**
+   * Zero-build static files served directly via `python3 -m http.server`.
+   * Clean, responsive dark-mode styling with distinct cyan (`X`) and rose (`O`) player accents, active turn indicators, move progression counters (`Move N / 9`), and an accessible rules modal.
+
+4. **Verification & Proof Layer (`verify_no_draws.py` & `tests/game.test.js`):**
+   * **Unit Regression Suite (`tests/game.test.js`):** Fast, deterministic verification of individual rule edge cases (horizontal/diagonal line wins, center tie-breaker wins for X and O, and input validation guards).
+   * **Combinatorial DFS Engine (`verify_no_draws.py`):** Exhaustive tree traversal evaluating all 255,168 reachable game paths to computationally prove 0 draws and termination in $\le 9$ moves.
+
+---
+
+## 5. Current Status & Known Edge Cases
 
 ### Status
 * Game Engine (`src/game.js`): Fully implemented and tested with standard 8 lines and center tie-breaker.
@@ -128,3 +181,4 @@ Every single reachable terminal state in the entire game tree was computationall
 
 ### Strategic Nuance (Center Control)
 Because the center cell acts as both the primary tactical pivot for lines and the tie-breaker decider, Player 1 (X) moving first can claim the center square on turn 1. Player 2 (O) must immediately counter tactically to create dual threats or block X's paths. This intensifies the strategic tension of ordinary Tic-Tac-Toe without altering its familiar rules.
+
